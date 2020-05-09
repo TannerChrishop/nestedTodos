@@ -1,0 +1,15 @@
+body {
+  font-size: 1.2em;
+}
+
+#main {
+  font-size: 1.5em;
+}
+
+ul {
+  margin-left: 3.5%;
+}
+
+li {
+  list-style: none;
+}
