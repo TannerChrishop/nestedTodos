@@ -5,7 +5,7 @@ function addToList(e) {
 
   if (e.target.id === "newItem") {
 
-    e.target.parentNode = "<input onkeypress = 'captureInput(event)' id = 'todoItem' type = 'text'>";
+    e.target.parentNode.innerHTML = "<input onkeypress = 'captureInput(event)' id = 'todoItem' type = 'text'>";
   }
 }
 
@@ -39,6 +39,7 @@ function newList(e) {
 
 // updates array 'map' with a map of user input to store in localStorage
 function useMap(value, domTree, eventTarget, arrDepth) {
+  debugger;
 
   for (var i = 0, j = 0, w = 0; i < domTree.children.length; i++) {
 
