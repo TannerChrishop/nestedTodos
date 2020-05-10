@@ -13,7 +13,7 @@ function addToList(e) {
 function captureInput(e) {
 
   if (e.keyCode === 13) {
-    
+
     var x = e.target, y = x.parentNode, plusLi = document.createElement('li');
     y.innerHTML = x.value + "<span id = 'newList'> * </span>";
     plusLi.innerHTML = "<span id = 'newItem'> + </span>";
@@ -28,6 +28,7 @@ function newList(e) {
 
   if (e.target.id === "newList") {
 
+    e.target.innerHTML = "";
     var x = e.target.parentNode, ul = document.createElement('ul'), plusLi = document.createElement('li');
     plusLi.innerHTML = "<span id = 'newItem'> + </span>";
     x.appendChild(ul);
@@ -39,12 +40,11 @@ function newList(e) {
 
 // updates array 'map' with a map of user input to store in localStorage
 function useMap(value, domTree, eventTarget, arrDepth) {
-  debugger;
 
   for (var i = 0, j = 0, w = 0; i < domTree.children.length; i++) {
 
     if (i > 0 && domTree.children[i - 1].children[1]) {
-      
+
       w++;
     }
     if (domTree.children[i] === eventTarget) {
@@ -69,34 +69,43 @@ function parseMap(tree, map) {
 
   var l = 0;
 
-  map.forEach(function (item, i) {
-
+  if (map.length === 0) {
     var plusLi = document.createElement('li');
     plusLi.innerHTML = "<span id = 'newItem'> + </span>";
-
-    for (var k = 0; k <= tree.children.length - 1; k++) {
-
-      if (tree.children[k].children[0] && tree.children[k].children[0].id === 'newItem') {
-
-        tree.removeChild(tree.children[k]);
-      }
-    }
-
-    if (!Array.isArray(item)) {
-
-      var mainLi = document.createElement('li');
-      mainLi.innerHTML = item + "<span id = 'newList'> * </span>";
-      tree.appendChild(mainLi);
-
-    } else {
-      var ul = document.createElement('ul');
-      ul.appendChild(plusLi);
-      tree.children[i - l - 1].appendChild(ul);
-      parseMap(tree.children[i - l - 1].children[1], item);
-      l++;
-    }
     tree.appendChild(plusLi);
-  });
+  }
+  else {
+
+    map.forEach(function (item, i) {
+
+      var plusLi = document.createElement('li');
+      plusLi.innerHTML = "<span id = 'newItem'> + </span>";
+
+      for (var k = 0; k <= tree.children.length - 1; k++) {
+
+        if (tree.children[k].children[0] && tree.children[k].children[0].id === 'newItem') {
+
+          tree.removeChild(tree.children[k]);
+        }
+      }
+
+      if (!Array.isArray(item)) {
+
+        var mainLi = document.createElement('li');
+        mainLi.innerHTML = item + "<span id = 'newList'> * </span>";
+        tree.appendChild(mainLi);
+
+      } else {
+        var ul = document.createElement('ul');
+        ul.appendChild(plusLi);
+        tree.children[i - l - 1].children[0].innerHTML = "";
+        tree.children[i - l - 1].appendChild(ul);
+        parseMap(tree.children[i - l - 1].children[1], item);
+        l++;
+      }
+      tree.appendChild(plusLi);
+    });
+  }
 }
 
 // allows arrayed to be stored in localStorage
