@@ -13,3 +13,7 @@ ul {
 li {
   list-style: none;
 }
+
+button {
+  margin-left: 5%;
+}

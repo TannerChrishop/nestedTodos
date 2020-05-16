@@ -11,15 +11,14 @@ function addToList(e) {
 
 // captures user input and creates list item
 function captureInput(e) {
-
   if (e.keyCode === 13) {
 
-    var x = e.target, y = x.parentNode, plusLi = document.createElement('li');
-    y.innerHTML = x.value + "<span id = 'newList'> * </span>";
-    plusLi.innerHTML = "<span id = 'newItem'> + </span>";
-    y.parentNode.appendChild(plusLi);
-    useMap(x.value, main, y, map);
+    var inputField = e.target, li = inputField.parentNode, plusLi = document.createElement('li');
+
+    li.innerHTML = "";
+    useMap(inputField.value, main, li, map);
     localStorage.setObj('map', map);
+    parseMap(main, map);
   }
 }
 
@@ -28,51 +27,99 @@ function newList(e) {
 
   if (e.target.id === "newList") {
 
-    e.target.innerHTML = "";
-    var x = e.target.parentNode, ul = document.createElement('ul'), plusLi = document.createElement('li');
-    plusLi.innerHTML = "<span id = 'newItem'> + </span>";
-    x.appendChild(ul);
-    ul.appendChild(plusLi);
-    useMap([], main, x, map);
+    var ul = e.target.parentNode.parentNode;
+
+    useMap([], main, ul, map);
     localStorage.setObj('map', map);
+    parseMap(main, map);
+  }
+}
+// deletes clicked item and its children
+function deleteItem(e) {
+
+  if (e.target.id === "delete") {
+
+    var li = e.target.parentNode;
+
+    useMap(null, main, li, map);
+
+    parseMap(main, map);
+
+    localStorage.setObj('map', map);
+
   }
 }
 
 // updates array 'map' with a map of user input to store in localStorage
-function useMap(value, domTree, eventTarget, arrDepth) {
+function useMap(value, ul, eventTarget, arr, prevArr) {
 
-  for (var i = 0, j = 0, w = 0; i < domTree.children.length; i++) {
+  for (var i = 0, olderSiblings = 0, olderSiblingArrays = 0; i < ul.children.length; i++) {
 
-    if (i > 0 && domTree.children[i - 1].children[1]) {
+    if (i > 0 && ul.children[i - 1].children[2] && ul.children[i - 1].children[2].nodeName === "UL") {
 
-      w++;
+      olderSiblingArrays++;
     }
-    if (domTree.children[i] === eventTarget) {
+    if (ul.children[i] === eventTarget) {
 
-      if (Array.isArray(value)) {
+      if (Array.isArray(value)) return (arr.splice(i + olderSiblingArrays + 1, 0, value));
 
-        return (arrDepth.splice(i + w + 1, 0, value));
-      } else {
-        return arrDepth.splice(i + w + j, 0, value);
-      }
+      else if (value === null) {
+
+        if (prevArr === undefined) {
+
+          if (main.children[i].children[2]) return arr.splice(i, main.children[i].children[2].children.length);
+
+          else return arr.splice(i, 1);
+          
+        } else {
+
+          var x = 1;
+
+          if (Array.isArray(prevArr[i + 1 + olderSiblingArrays])) {
+
+            x = prevArr[i - olderSiblings - olderSiblingArrays].length;
+
+            prevArr[i+1].splice(i, x - i);
+          }
+
+          else return arr.splice(i + olderSiblingArrays, x);
+        }
+      } else return arr.splice(i + olderSiblings, 0, value);
+
+    } else if (ul.children[i].children[2] && ul.children[i].children[2].nodeName === "UL") {
+
+      if (prevArr !== arr) prevArr = arr;
+
+      useMap(value, ul.children[i].children[2], eventTarget, arr[i + olderSiblingArrays + 1], prevArr);
     }
-    else if (domTree.children[i].children[1] && domTree.children[i].children[1].nodeName === "UL") {
+    olderSiblings++;
+  }
+}
 
-      useMap(value, domTree.children[i].children[1], eventTarget, arrDepth[i + w + 1]);
-    }
-    j++;
+// removes unneccessary plus signs 
+function clearPlus(ul) {
+
+  for (var k = 0; k < ul.children.length; k++) {
+
+    var currentLi = ul.children[k];
+    var liPlusSign = currentLi.children[0];
+
+    if (liPlusSign && liPlusSign.id === 'newItem') ul.removeChild(currentLi);
   }
 }
 
 // parses array map stored in localStorage to recreate list in dom
-function parseMap(tree, map) {
+function parseMap(ul, map) {
 
-  var l = 0;
+  ul.innerHTML = "";
+
+  var siblingsArrays = 0;
 
   if (map.length === 0) {
+
     var plusLi = document.createElement('li');
     plusLi.innerHTML = "<span id = 'newItem'> + </span>";
-    tree.appendChild(plusLi);
+    ul.appendChild(plusLi);
   }
   else {
 
@@ -81,29 +128,24 @@ function parseMap(tree, map) {
       var plusLi = document.createElement('li');
       plusLi.innerHTML = "<span id = 'newItem'> + </span>";
 
-      for (var k = 0; k <= tree.children.length - 1; k++) {
-
-        if (tree.children[k].children[0] && tree.children[k].children[0].id === 'newItem') {
-
-          tree.removeChild(tree.children[k]);
-        }
-      }
+      clearPlus(ul);
 
       if (!Array.isArray(item)) {
 
         var mainLi = document.createElement('li');
-        mainLi.innerHTML = item + "<span id = 'newList'> * </span>";
-        tree.appendChild(mainLi);
+        mainLi.innerHTML = "<span id = 'delete'> - </span>" + item + "<span> <img src = 'https://img.icons8.com/small/16/000000/down2.png' id = 'newList'/></span>";
+        ul.appendChild(mainLi);
 
       } else {
-        var ul = document.createElement('ul');
-        ul.appendChild(plusLi);
-        tree.children[i - l - 1].children[0].innerHTML = "";
-        tree.children[i - l - 1].appendChild(ul);
-        parseMap(tree.children[i - l - 1].children[1], item);
-        l++;
+        var nextUl = document.createElement('ul');
+        nextUl.appendChild(plusLi);
+
+        ul.children[i - siblingsArrays - 1].children[1].innerHTML = "";
+        ul.children[i - siblingsArrays - 1].appendChild(nextUl);
+        parseMap(ul.children[i - siblingsArrays - 1].children[2], item);
+        siblingsArrays++;
       }
-      tree.appendChild(plusLi);
+      ul.appendChild(plusLi);
     });
   }
 }
@@ -123,6 +165,14 @@ if (localStorage.getObj('map')) {
   parseMap(main, map);
 }
 
-//set up even listners
+// set up even listners
 main.addEventListener('click', addToList);
 main.addEventListener('click', newList);
+main.addEventListener('click', deleteItem);
+
+// clears localStorage and refreshes page
+function reset() {
+
+  localStorage.clear();
+  location.reload();
+}
